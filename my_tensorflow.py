@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import random as rn
 
 
 def nd_arrays():
@@ -23,9 +24,11 @@ def nd_arrays():
 
 
 def flow():
-    t4 = tf.zeros([2, 4], name="z")
-    t5 = tf.negative(t4, name="n") + 100 * 0.0002345
-    print("t4 %s" % t5)
+    t4 = tf.ones([2, 4], name="z")
+    t5 = tf.negative(t4, name="n")[:2:]
+    with tf.Session() as sess:
+        result = sess.run(t5)
+        print("result %s" % result)
 
 
 flow()
