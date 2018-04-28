@@ -1,6 +1,5 @@
 import tensorflow as tf
 import numpy as np
-import random as rn
 
 
 def nd_arrays():
@@ -25,10 +24,30 @@ def nd_arrays():
 
 def flow():
     t4 = tf.ones([2, 4], name="z")
-    t5 = tf.negative(t4, name="n")[:2:]
+    t5 = tf.negative(t4, name="n")
     with tf.Session() as sess:
         result = sess.run(t5)
         print("result %s" % result)
 
 
-flow()
+def variables():
+    with tf.Session() as sess:  # Create a session
+        raw_data = [1, 4, 17, 22, 6, 3, 4, 23, 2, 3, 10, 5, 6, 7]
+        spike = tf.Variable(False)
+        sess.run(spike.initializer)  # create and initialize a tf variable
+
+        print("spike (is bool_ref:%s) (size is 0:%s) %s %a"
+              % (spike.dtype == "bool_ref", len(spike.shape) == 0, spike.shape, spike))
+
+        for i in range(1, len(raw_data)):
+            if raw_data[i] - raw_data[i - 1] > 4:
+                updater = tf.assign(spike, True)  # update the tf variable
+                res = sess.run(updater)
+                print("%7s %7d %7.2f" % (res, i, raw_data[i]))
+            else:
+                updater = tf.assign(spike, False)  # update the tf variable
+                res = sess.run(updater)
+                print("%7s %7d %7.2f" % (res, i, raw_data[i]))
+
+
+variables()
