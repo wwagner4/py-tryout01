@@ -2,6 +2,9 @@ import tensorflow as tf
 import numpy as np
 import os.path as osp
 import pathlib as pl
+import time as ti
+
+from tensorflow import Variable
 
 home_dir = pl.Path.home()
 work_dir = osp.join(home_dir, "work/work-greenscreen")
@@ -97,4 +100,32 @@ def variables_r():
         print("resored up %s" % up.eval())
 
 
-variables_r()
+def moving_average():
+    with tf.Session() as sess:
+        raw_data = np.random.normal(10, 1, size=50)
+        print("raw_data: %s" % raw_data)
+
+        alpha = tf.constant(0.1)  # must not necessarily be a tensor constant. Can be a float
+        curr_val = tf.placeholder(tf.float32)
+
+        avg: Variable = tf.Variable(0.0)
+
+        sess.run(tf.global_variables_initializer())  # initialize all variables and placeholders
+
+        # define the operation
+        mov_avg_op = alpha * curr_val + (1 - alpha) * avg
+
+        # define summaries and writer for TensorBoard
+        avg_sum = tf.summary.scalar('running_average', mov_avg_op)
+        writer = tf.summary.FileWriter(osp.join(work_dir, "logs"))
+
+        for i, val in enumerate(raw_data):
+            (avg_str, new_avg) = sess.run([avg_sum, mov_avg_op], feed_dict={curr_val: val})
+            print("new_avg %s %5.3f" % (type(new_avg), new_avg))
+            sess.run(tf.assign(avg, new_avg))
+            writer.add_summary(avg_str, i)
+            print("%5.2f %5.2f" % (val, new_avg))
+            ti.sleep(0.05)
+
+
+moving_average()
