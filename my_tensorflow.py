@@ -1,5 +1,10 @@
 import tensorflow as tf
 import numpy as np
+import os.path as osp
+import pathlib as pl
+
+home_dir = pl.Path.home()
+work_dir = osp.join(home_dir, "work/work-greenscreen")
 
 
 def nd_arrays():
@@ -30,11 +35,11 @@ def flow():
         print("result %s" % result)
 
 
-def variables():
+def variables1():
     with tf.Session() as sess:  # Create a session
         raw_data = [1, 4, 17, 22, 6, 3, 4, 23, 2, 3, 10, 5, 6, 7]
         spike = tf.Variable(False)
-        sess.run(spike.initializer)  # create and initialize a tf variable
+        spike.initializer.run(session=sess)  # create and initialize a tf variable
 
         print("spike (is bool_ref:%s) (size is 0:%s) %s %a"
               % (spike.dtype == "bool_ref", len(spike.shape) == 0, spike.shape, spike))
@@ -42,12 +47,54 @@ def variables():
         for i in range(1, len(raw_data)):
             if raw_data[i] - raw_data[i - 1] > 4:
                 updater = tf.assign(spike, True)  # update the tf variable
-                res = sess.run(updater)
+                res = updater.eval(session=sess)
                 print("%7s %7d %7.2f" % (res, i, raw_data[i]))
             else:
                 updater = tf.assign(spike, False)  # update the tf variable
-                res = sess.run(updater)
+                res = updater.eval(session=sess)
                 print("%7s %7d %7.2f" % (res, i, raw_data[i]))
 
 
-variables()
+def variables_s():
+    with tf.Session() as sess:  # Create a session
+        raw_data = [1, 4, 17, 22, 6, 3, 4, 23, 2, 3, 10, 5, 6, 7]
+        spikes_init = np.full((len(raw_data)), False)
+        print("spikes_init:%s" % spikes_init)
+        spikes = tf.Variable(spikes_init, name="sps")
+        spikes.initializer.run()  # create and initialize a tf variable
+
+        # Must be initialized after variables are initialized in the session
+        # Saves all tf variables that where initialized before the saver
+        # is initialized
+        saver = tf.train.Saver()
+
+        print("spike (is bool_ref:%s) (size is 0:%s) %s %a"
+              % (spikes.dtype == "bool_ref", len(spikes.shape) == 0, spikes.shape, spikes))
+
+        for i in range(1, len(raw_data)):
+            if raw_data[i] - raw_data[i - 1] > 4:
+                updater = tf.assign(spikes[i], True, name='up')  # update the tf variable
+                res = updater.eval()
+                print("%7s %7d %7.2f" % (res, i, raw_data[i]))
+            else:
+                updater = tf.assign(spikes[i], False, name='up')  # update the tf variable
+                res = updater.eval()
+                print("%7s %7d %7.2f" % (res, i, raw_data[i]))
+
+        pa = saver.save(sess, osp.join(work_dir, "v001.ckpt"))
+        print("saved to '%s'" % pa)
+
+
+def variables_r():
+    with tf.Session() as sess:
+        spikes = tf.Variable(np.full(14, False), name="sps")  # size must be the same as the stored variable
+        saver = tf.train.Saver()
+        up = tf.Variable(True, name="up")
+        up.initializer.run()
+        saver.restore(sess, osp.join(work_dir, "v001.ckpt"))
+
+        print("resored sp %s" % spikes.eval())
+        print("resored up %s" % up.eval())
+
+
+variables_r()
