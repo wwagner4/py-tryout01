@@ -1,8 +1,10 @@
 import tensorflow as tf
 import numpy as np
 import os.path as osp
+import os
 import pathlib as pl
 import time as ti
+import datetime as dt
 
 from tensorflow import Variable
 
@@ -101,11 +103,23 @@ def variables_r():
 
 
 def moving_average():
+    def create_ts() -> str:
+        _ti = ti.time()
+        _dt = dt.datetime.fromtimestamp(_ti)
+        return _dt.strftime('%Y%m%d-%H%M%S')
+
+    def dir_for_run() -> str:
+        logs_dir = osp.join(work_dir, "logs")
+        run_dir = osp.join(logs_dir, create_ts())
+        if not os.path.exists(run_dir):
+            os.makedirs(run_dir)
+        return run_dir
+
     with tf.Session() as sess:
-        raw_data = np.random.normal(10, 1, size=50)
+        raw_data = np.random.normal(10, 1, size=500)
         print("raw_data: %s" % raw_data)
 
-        alpha = tf.constant(0.1)  # must not necessarily be a tensor constant. Can be a float
+        alpha = tf.constant(0.01)  # must not necessarily be a tensor constant. Can be a float
         curr_val = tf.placeholder(tf.float32)
 
         avg: Variable = tf.Variable(0.0)
@@ -116,8 +130,8 @@ def moving_average():
         mov_avg_op = alpha * curr_val + (1 - alpha) * avg
 
         # define summaries and writer for TensorBoard
-        avg_sum = tf.summary.scalar('running_average', mov_avg_op)
-        writer = tf.summary.FileWriter(osp.join(work_dir, "logs"))
+        avg_sum = tf.summary.scalar('Running Average', mov_avg_op)
+        writer = tf.summary.FileWriter(dir_for_run())
 
         for i, val in enumerate(raw_data):
             (avg_str, new_avg) = sess.run([avg_sum, mov_avg_op], feed_dict={curr_val: val})
@@ -125,7 +139,7 @@ def moving_average():
             sess.run(tf.assign(avg, new_avg))
             writer.add_summary(avg_str, i)
             print("%5.2f %5.2f" % (val, new_avg))
-            ti.sleep(0.05)
+            ti.sleep(2)
 
 
 moving_average()
