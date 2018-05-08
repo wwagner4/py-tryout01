@@ -32,5 +32,10 @@ k = np.array([[[1, 2, 3],
 
 print("k = {}".format(k))
 
-l1 = np.insert(k, 3, 10, axis=2)
+ne = np.array([
+    np.arange(10, 13),
+    np.arange(20, 23)
+])
+
+l1 = np.insert(k, 3, ne, axis=2)
 print("l1 = {}".format(l1))
