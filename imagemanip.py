@@ -3,6 +3,7 @@ import os.path as osp
 import matplotlib.pylab as pl
 import numpy as np
 import matplotlib.pyplot as plt
+import random as ran
 from pathlib import Path
 
 home_dir = Path.home()
@@ -24,12 +25,19 @@ img_file = "res/img01.png"
 print("reading {}".format(img_file))
 img: np.array = pl.imread(img_file)
 
-print("img {}".format(img.shape))
+h = img.shape[0]
+w = img.shape[1]
+print("img w:{} h:{}".format(w, h))
 
+transp = np.empty([h, w], dtype=np.float32)
+for i in range(h):
+    for j in range(w):
+        transp[i, j] = i / h + ran.uniform(0.0, 0.1)
+        
 # Add transparency
-img1 = np.insert(img, 3, 0.2, axis=2)
+img1 = np.insert(img, 3, transp, axis=2)
 
-out_file = osp.join(work_dir, "out6.png")
+out_file = osp.join(work_dir, "out7.png")
 plot_image(img1, out_file)
 
 print("saved image to {}".format(out_file))
